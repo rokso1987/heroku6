@@ -20,9 +20,21 @@ def read_and_broadcast():
         spreadsheet_id = data.get('spreadsheet_id')
         if 'range' in data:
             range_ = data.get('range')
-            klients = read_array(spreadsheet_id, range_)
-            otvet = json.dumps({"status": "1", "response": klients})
-            return otvet
+            if 'promo' in data:
+                promo = data.get('promo')
+                if 'user' in data:
+                    user = data.get('user')
+                    service = google_registry()
+                    promolist = read_array(service, spreadsheet_id, range_)
+                    check = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
+                    otvet = json.dumps({"status": check})
+                    return otvet
+                else:
+                    otvet = json.dumps({"status": "0", "response": "user was not transacted!"})
+                    return otvet
+            else:
+                otvet = json.dumps({"status": "0", "response": "promocode was not transacted!"})
+                return otvet
 
         else:
             otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
@@ -32,8 +44,7 @@ def read_and_broadcast():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
-
-def read_array(spreadsheet_id, range_):
+def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
     # The file 4.pickle stores the user's access and refresh tokens, and is
@@ -55,13 +66,39 @@ def read_array(spreadsheet_id, range_):
             pickle.dump(creds, token)
 
     service = build('sheets', 'v4', credentials=creds)
-
+    return service
+def read_array(service, spreadsheet_id, range_):
     request = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_)
     response = request.execute()
-    values = response.get('values')
+    return response
 
-    if not values:
-        return 'No data found.'
-    else:
-        otvet3 = {"content": values}
-        return otvet3
+def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
+    values = promolist.get('values')
+    otvet = ''
+    row = 1
+    for code in values:
+
+        if code[0] == promo:
+            if len(code) == 2:
+                otvet = 'Код использован!'
+            else:
+                otvet = 'True'
+                write_used(service, spreadsheet_id, row, range_, user)
+            break
+        else:
+            row += 1
+            otvet = 'Код не найден!'
+    return otvet
+
+def write_used(service, spreadsheet_id, row, range_, user):
+    split_range = range_.split('!')
+    list = split_range[0]
+    range = f'{list}!b{row}:b{row}'
+    value_range_body = {
+        "values": [[user]]
+    }
+    value_Input_Option = "USER_ENTERED"
+
+    request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range,
+                                                     valueInputOption=value_Input_Option).execute()
+
