@@ -31,8 +31,8 @@ def read_array(spreadsheet_id, range_):
     # The file 4.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('../4.pickle'):
-        with open('../4.pickle', 'rb') as token:
+    if os.path.exists('4.pickle'):
+        with open('4.pickle', 'rb') as token:
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
@@ -61,7 +61,7 @@ def read_array(spreadsheet_id, range_):
             #     include_granted_scopes='true')
 
         # Save the credentials for the next run
-        with open('../4.pickle', 'wb') as token:
+        with open('4.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
     service = build('sheets', 'v4', credentials=creds)
