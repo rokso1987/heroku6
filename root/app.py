@@ -11,7 +11,7 @@ app = flask.Flask(__name__)
 @app.route('/')
 def index():
     return('It works')
-@app.route("/read_and_broadcast", methods=['POST', "GET"])
+@app.route("/check_promocode", methods=['POST', "GET"])
 def read_and_broadcast():
     if flask.request.method == 'GET':
         return 'The functions works well'
