@@ -40,7 +40,7 @@ def read_array(spreadsheet_id, range_):
             creds.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(
-                '../credentials.json', SCOPES)
+                'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
             # flow = google_auth_oauthlib.flow.Flow.from_client_config(
             #     client_config=CLIENT_CONFIG,
