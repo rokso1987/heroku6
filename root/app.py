@@ -76,12 +76,27 @@ def buttons_array():
     if flask.request.method == 'GET':
         return 'The functions works well'
     data = flask.request.get_json(force=True)
-    otvet = json.dumps({"massiv":[
-    "Железногорск (Курская область)",
-    "Железногорск (Красноярский край)",
-    "Железногорск-Илимский"
-]})
-    return otvet
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            service = google_registry()
+            massiv = get_button_massiv(service, range_, spreadsheet_id)
+            otvet = json.dumps({"massiv": massiv})
+            return otvet
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+#     otvet = json.dumps({"massiv":[
+#     "Железногорск (Курская область)",
+#     "Железногорск (Красноярский край)",
+#     "Железногорск-Илимский"
+# ]})
+#     return otvet
 
 def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
@@ -158,3 +173,7 @@ def write_array_func(service, range_, spreadsheet_id, data_array):
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range_,
                                                      valueInputOption=value_Input_Option).execute()
 
+def get_button_massiv(service, range_, spreadsheet_id):
+    request = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_)
+    response = request.execute()
+    return response
