@@ -81,8 +81,8 @@ def buttons_array():
         if 'range' in data:
             range_ = data.get('range')
             service = google_registry()
-            massiv = get_button_massiv(service, range_, spreadsheet_id)
-            otvet = json.dumps({"massiv": massiv})
+            button_massiv = get_button_massiv(service, range_, spreadsheet_id)
+            otvet = json.dumps({"massiv": button_massiv})
             return otvet
         else:
             otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
@@ -176,4 +176,8 @@ def write_array_func(service, range_, spreadsheet_id, data_array):
 def get_button_massiv(service, range_, spreadsheet_id):
     request = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_)
     response = request.execute()
-    return response
+    list_button_array = response.get('values')
+    button_massiv = []
+    for buttons in list_button_array:
+        button_massiv.append(buttons[0])
+    return button_massiv
