@@ -44,6 +44,33 @@ def read_and_broadcast():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
+@app.route("/write_array", methods=['POST', "GET"])
+def write_array():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            if 'data_array' in data:
+                data_array = data.get('data_array')
+                service = google_registry()
+                write_array_func(service, range_, spreadsheet_id, data_array)
+                otvet = json.dumps({"status": "OK"})
+                return otvet
+            else:
+                otvet = json.dumps({"status": "0", "response": "data_array was not transacted!"})
+                return otvet
+
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+
 def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
@@ -76,8 +103,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
     values = promolist.get('values')
     status = ''
     row = 1
-    Row_list = {}
-    otvet = {}
+    row_list = {}
     for code in values:
 
         if code[0] == promo:
@@ -85,7 +111,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
                 if code[1] == "":
                     write_used(service, spreadsheet_id, row, range_, user)
                     for i in range(2, len(code)):
-                        Row_list[i+1] = code[i]
+                        row_list[i+1] = code[i]
                     status = 'True'
 
                 else:
@@ -97,18 +123,26 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         else:
             row += 1
             status = 'Код не найден!'
-    otvet = {"status": status, "Row_list": Row_list, "row": str(row)}
+    otvet = {"status": status, "row_list": row_list, "row": str(row)}
     return otvet
 
 def write_used(service, spreadsheet_id, row, range_, user):
     split_range = range_.split('!')
     list = split_range[0]
-    range = f'{list}!b{row}:b{row}'
+    range = f'{list}!b{row}'
     value_range_body = {
         "values": [[user]]
     }
     value_Input_Option = "USER_ENTERED"
 
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range,
+                                                     valueInputOption=value_Input_Option).execute()
+
+def write_array_func(service, range_, spreadsheet_id, data_array):
+    value_range_body = {
+        "values": [data_array]
+    }
+    value_Input_Option = "USER_ENTERED"
+    request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range_,
                                                      valueInputOption=value_Input_Option).execute()
 
