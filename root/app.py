@@ -24,9 +24,8 @@ def read_and_broadcast():
                 promo = data.get('promo')
                 if 'user' in data:
                     user = data.get('user')
-                    service = google_registry()
-                    promolist = read_array(service, spreadsheet_id, range_)
-                    check = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
+                    promolist = read_array(spreadsheet_id, range_)
+                    check = check_promocode(spreadsheet_id, promolist, promo, range_, user)
                     otvet = json.dumps({"otvet": check})
                     return otvet
                 else:
@@ -55,8 +54,7 @@ def write_array():
             range_ = data.get('range')
             if 'data_array' in data:
                 data_array = data.get('data_array')
-                service = google_registry()
-                write_array_func(service, range_, spreadsheet_id, data_array)
+                write_array_func(range_, spreadsheet_id, data_array)
                 otvet = json.dumps({"status": "OK"})
                 return otvet
             else:
@@ -71,8 +69,8 @@ def write_array():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
-@app.route("/buttons_array", methods=['POST', "GET"])
-def buttons_array():
+@app.route("/buttons_category_array", methods=['POST', "GET"])
+def buttons_category_array():
     if flask.request.method == 'GET':
         return 'The functions works well'
     data = flask.request.get_json(force=True)
@@ -80,8 +78,7 @@ def buttons_array():
         spreadsheet_id = data.get('spreadsheet_id')
         if 'range' in data:
             range_ = data.get('range')
-            service = google_registry()
-            button_massiv = get_button_massiv(service, range_, spreadsheet_id)
+            button_massiv = get_button_category_massiv(range_, spreadsheet_id)
             otvet = json.dumps({"massiv": button_massiv})
             return otvet
         else:
@@ -121,12 +118,13 @@ def google_registry():
 
     service = build('sheets', 'v4', credentials=creds)
     return service
-def read_array(service, spreadsheet_id, range_):
+def read_array(spreadsheet_id, range_):
+    service = google_registry()
     request = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_)
     response = request.execute()
     return response
 
-def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
+def check_promocode(spreadsheet_id, promolist, promo, range_, user):
     values = promolist.get('values')
     status = ''
     row = 1
@@ -136,7 +134,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         if code[0] == promo:
             if len(code) >= 2:
                 if code[1] == "":
-                    write_used(service, spreadsheet_id, row, range_, user)
+                    write_used(spreadsheet_id, row, range_, user)
                     for i in range(2, len(code)):
                         row_list[i+1] = code[i]
                     status = 'True'
@@ -145,7 +143,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
                     status = 'Код использован!'
             else:
                 status = 'True'
-                write_used(service, spreadsheet_id, row, range_, user)
+                write_used(spreadsheet_id, row, range_, user)
             break
         else:
             row += 1
@@ -153,7 +151,8 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
     otvet = {"status": status, "row_list": row_list, "row": str(row)}
     return otvet
 
-def write_used(service, spreadsheet_id, row, range_, user):
+def write_used(spreadsheet_id, row, range_, user):
+    service = google_registry()
     split_range = range_.split('!')
     list = split_range[0]
     range = f'{list}!b{row}'
@@ -165,7 +164,8 @@ def write_used(service, spreadsheet_id, row, range_, user):
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range,
                                                      valueInputOption=value_Input_Option).execute()
 
-def write_array_func(service, range_, spreadsheet_id, data_array):
+def write_array_func(range_, spreadsheet_id, data_array):
+    service = google_registry()
     value_range_body = {
         "values": [data_array]
     }
@@ -173,9 +173,8 @@ def write_array_func(service, range_, spreadsheet_id, data_array):
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range_,
                                                      valueInputOption=value_Input_Option).execute()
 
-def get_button_massiv(service, range_, spreadsheet_id):
-    request = service.spreadsheets().values().get(spreadsheetId=spreadsheet_id, range=range_)
-    response = request.execute()
+def get_button_massiv(range_, spreadsheet_id):
+    response = read_array(spreadsheet_id, range_)
     list_button_array = response.get('values')
     button_massiv = []
     for buttons in list_button_array:
