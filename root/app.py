@@ -83,11 +83,11 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         if code[0] == promo:
             if len(code) >= 2:
                 if code[1] == "":
-                    otvet = 'True'
                     array_col = code
                     write_used(service, spreadsheet_id, row, range_, user)
                     for i in range(2, len(code)):
                         Row_list[i+1] = code[i]
+                    otvet = 'True'
 
                 else:
                     otvet = 'Код использован!'
