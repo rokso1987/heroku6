@@ -77,14 +77,12 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
     status = ''
     row = 1
     Row_list = {}
-    array_col = []
     otvet = {}
     for code in values:
 
         if code[0] == promo:
             if len(code) >= 2:
                 if code[1] == "":
-                    array_col = code
                     write_used(service, spreadsheet_id, row, range_, user)
                     for i in range(2, len(code)):
                         Row_list[i+1] = code[i]
@@ -99,7 +97,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         else:
             row += 1
             status = 'Код не найден!'
-    otvet = {"status": status, "Row_list": Row_list, "array_col": array_col}
+    otvet = {"status": status, "Row_list": Row_list}
     return otvet
 
 def write_used(service, spreadsheet_id, row, range_, user):
