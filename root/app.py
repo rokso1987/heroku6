@@ -12,7 +12,7 @@ app = flask.Flask(__name__)
 def index():
     return('It works')
 @app.route("/check_promocode", methods=['POST', "GET"])
-def read_and_broadcast():
+def check_promocode():
     if flask.request.method == 'GET':
         return 'The functions works well'
     data = flask.request.get_json(force=True)
@@ -173,7 +173,7 @@ def write_array_func(range_, spreadsheet_id, data_array):
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range_,
                                                      valueInputOption=value_Input_Option).execute()
 
-def get_button_massiv(range_, spreadsheet_id):
+def get_button_category_massiv(range_, spreadsheet_id):
     response = read_array(spreadsheet_id, range_)
     list_button_array = response.get('values')
     button_massiv = []
