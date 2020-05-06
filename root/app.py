@@ -97,7 +97,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         else:
             row += 1
             status = 'Код не найден!'
-    otvet = {"status": status, "Row_list": Row_list}
+    otvet = {"status": status, "Row_list": Row_list, "row": str(row)}
     return otvet
 
 def write_used(service, spreadsheet_id, row, range_, user):
