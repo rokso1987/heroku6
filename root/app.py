@@ -26,8 +26,8 @@ def read_and_broadcast():
                     user = data.get('user')
                     service = google_registry()
                     promolist = read_array(service, spreadsheet_id, range_)
-                    check, Row_list, array_col = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
-                    otvet = json.dumps({"status": check, "Row_list": Row_list, "array_col": array_col})
+                    check = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
+                    otvet = json.dumps({"otvet": check})
                     return otvet
                 else:
                     otvet = json.dumps({"status": "0", "response": "user was not transacted!"})
@@ -74,10 +74,11 @@ def read_array(service, spreadsheet_id, range_):
 
 def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
     values = promolist.get('values')
-    otvet = ''
+    status = ''
     row = 1
     Row_list = {}
     array_col = []
+    otvet = {}
     for code in values:
 
         if code[0] == promo:
@@ -87,18 +88,19 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
                     write_used(service, spreadsheet_id, row, range_, user)
                     for i in range(2, len(code)):
                         Row_list[i+1] = code[i]
-                    otvet = 'True'
+                    status = 'True'
 
                 else:
-                    otvet = 'Код использован!'
+                    status = 'Код использован!'
             else:
-                otvet = 'True'
+                status = 'True'
                 write_used(service, spreadsheet_id, row, range_, user)
             break
         else:
             row += 1
-            otvet = 'Код не найден!'
-    return otvet, Row_list, array_col
+            status = 'Код не найден!'
+        otvet = {"status": status, "Row_list": Row_list, "array_col": array_col }
+    return otvet
 
 def write_used(service, spreadsheet_id, row, range_, user):
     split_range = range_.split('!')
