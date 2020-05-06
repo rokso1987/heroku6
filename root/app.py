@@ -71,6 +71,18 @@ def write_array():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
+@app.route("/buttons_array", methods=['POST', "GET"])
+def buttons_array():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    otvet = json.dumps({"massiv":[
+    "Железногорск (Курская область)",
+    "Железногорск (Красноярский край)",
+    "Железногорск-Илимский"
+]})
+    return otvet
+
 def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
