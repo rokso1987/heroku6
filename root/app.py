@@ -26,8 +26,8 @@ def read_and_broadcast():
                     user = data.get('user')
                     service = google_registry()
                     promolist = read_array(service, spreadsheet_id, range_)
-                    check = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
-                    otvet = json.dumps({"status": check})
+                    check, Row_list = check_promocode(service, spreadsheet_id, promolist, promo, range_, user)
+                    otvet = json.dumps({"status": check, "Row_list": Row_list})
                     return otvet
                 else:
                     otvet = json.dumps({"status": "0", "response": "user was not transacted!"})
@@ -76,11 +76,19 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
     values = promolist.get('values')
     otvet = ''
     row = 1
+    Row_list = {}
     for code in values:
 
         if code[0] == promo:
-            if len(code) == 2:
-                otvet = 'Код использован!'
+            if len(code) >= 2:
+                if code[1] == "":
+                    otvet = 'True'
+                    write_used(service, spreadsheet_id, row, range_, user)
+                    for i in range(2, len(code)):
+                        Row_list[i+1] = code[i]
+
+                else:
+                    otvet = 'Код использован!'
             else:
                 otvet = 'True'
                 write_used(service, spreadsheet_id, row, range_, user)
@@ -88,7 +96,7 @@ def check_promocode(service, spreadsheet_id, promolist, promo, range_, user):
         else:
             row += 1
             otvet = 'Код не найден!'
-    return otvet
+    return otvet, Row_list
 
 def write_used(service, spreadsheet_id, row, range_, user):
     split_range = range_.split('!')
