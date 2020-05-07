@@ -209,12 +209,32 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
     list_button_array = response.get('values')
     massiv = []
     status = "0"
+    amount = "0"
+    range_list = []
     for list in list_button_array:
         if list[0] == pressed_button:
             status = "1"
+            amount = len(list) - 1
             for i in range(1, len(list)):
                 massiv.append(list[i])
+            for i in range(1, 4):
+                range_list.append(list[i])
             break
-    otvet = {"status": status, "massiv": massiv}
+#Ищем ТОП3 экспертов на соответсвующих страницах таблицы. Название страницы == list[i]
+    experts_info = {}
+    expert_info_list = []
+    array_expert_info = {}
+    count = 1
+    for expert in range_list:
+        range_ = f"{expert}!2:2"
+        expert_info_row = read_array(spreadsheet_id, range_)
+        expert_info_values = expert_info_row.get('values')
+        for i in range(len(expert_info_values)):
+            expert_info_list = expert_info_values[0]
+            for l in range(len(expert_info_list)):
+                array_expert_info[l+1] = expert_info_list[l]
+        experts_info[count] = array_expert_info
+        count += 1
+    otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": experts_info}
 
     return otvet
