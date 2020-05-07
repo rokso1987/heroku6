@@ -236,5 +236,3 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
     otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": array_expert_info}
 
     return otvet
-
-get_button_experts_massiv("Категории!2:10", "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE", "Категория 2")
