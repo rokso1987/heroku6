@@ -24,8 +24,7 @@ def check_promocode():
                 promo = data.get('promo')
                 if 'user' in data:
                     user = data.get('user')
-                    promolist = read_array(spreadsheet_id, range_)
-                    check = check_promocode(spreadsheet_id, promolist, promo, range_, user)
+                    check = check_promocode_func(spreadsheet_id, promo, range_, user)
                     otvet = json.dumps({"otvet": check})
                     return otvet
                 else:
@@ -95,6 +94,29 @@ def buttons_category_array():
 # ]})
 #     return otvet
 
+@app.route("/buttons_experts_array", methods=['POST', "GET"])
+def buttons_experts_array():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            if 'pressed_button' in data:
+                pressed_button = data.get('pressed_button')
+                otvet = get_button_experts_massiv(range_, spreadsheet_id, pressed_button)
+                return otvet
+            else:
+                otvet = json.dumps({"status": "0", "response": "pressed_button was not transacted!"})
+                return otvet
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+
 def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
@@ -124,7 +146,8 @@ def read_array(spreadsheet_id, range_):
     response = request.execute()
     return response
 
-def check_promocode(spreadsheet_id, promolist, promo, range_, user):
+def check_promocode_func(spreadsheet_id, promo, range_, user):
+    promolist = read_array(spreadsheet_id, range_)
     values = promolist.get('values')
     status = ''
     row = 1
@@ -180,3 +203,18 @@ def get_button_category_massiv(range_, spreadsheet_id):
     for buttons in list_button_array:
         button_massiv.append(buttons[0])
     return button_massiv
+
+def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
+    response = read_array(spreadsheet_id, range_)
+    list_button_array = response.get('values')
+    massiv = []
+    status = "0"
+    for list in list_button_array:
+        if list[0] == pressed_button:
+            status = "1"
+            for i in range(1, len(list)):
+                massiv.append(list[i])
+            break
+    otvet = {"status": status, "massiv": massiv}
+
+    return otvet
