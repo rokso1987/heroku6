@@ -222,7 +222,6 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
             break
 #Ищем ТОП3 экспертов на соответсвующих страницах таблицы. Название страницы == list[i]
     experts_info = {}
-    expert_info_list = []
     array_expert_info = {}
     count = 1
     for expert in range_list:
@@ -232,9 +231,10 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
         for i in range(len(expert_info_values)):
             expert_info_list = expert_info_values[0]
             for l in range(len(expert_info_list)):
-                array_expert_info[l+1] = expert_info_list[l]
-        experts_info[count] = array_expert_info
+                array_expert_info[f"{count}{l+1}"] = expert_info_list[l]
         count += 1
-    otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": experts_info}
+    otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": array_expert_info}
 
     return otvet
+
+get_button_experts_massiv("Категории!2:10", "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE", "Категория 2")
