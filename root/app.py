@@ -117,6 +117,24 @@ def buttons_experts_array():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
+@app.route("/expert_profile", methods=['POST', "GET"])
+def expert_profile():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            otvet = get_experts_profile(range_, spreadsheet_id)
+            return otvet
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+
 def google_registry():
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
     creds = None
@@ -221,7 +239,6 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
                 range_list.append(list[i])
             break
 #Ищем ТОП3 экспертов на соответсвующих страницах таблицы. Название страницы == list[i]
-    experts_info = {}
     array_expert_info = {}
     count = 1
     for expert in range_list:
@@ -235,4 +252,17 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
         count += 1
     otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": array_expert_info}
 
+    return otvet
+
+def get_experts_profile(range_, spreadsheet_id):
+    response = read_array(spreadsheet_id, range_)
+    expert_values_array = response.get('values')
+    array_expert_profile = {}
+    count = 1
+    for i in expert_values_array:
+        for l in range(len(i)):
+            array_expert_profile[f"{count}{l + 1}"] = i[l]
+        count += 1
+
+    otvet = {"values": array_expert_profile}
     return otvet
