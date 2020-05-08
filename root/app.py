@@ -257,12 +257,20 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
 def get_experts_profile(range_, spreadsheet_id):
     response = read_array(spreadsheet_id, range_)
     expert_values_array = response.get('values')
+    future_values = expert_values_array[1]
+    last_values = expert_values_array[2]
+    profile_values = expert_values_array[0]
     array_expert_profile = {}
     count = 1
-    for i in expert_values_array:
-        for l in range(len(i)):
-            array_expert_profile[f"{count}{l + 1}"] = i[l]
+    future_sobytia = ''
+    last_sobytia = ''
+    for i in profile_values:
+        array_expert_profile[count] = i
         count += 1
+    for i in future_values:
+        future_sobytia = f"{future_sobytia}{i}\n"
+    for i in last_values:
+        last_sobytia = f"{last_sobytia}{i}\n"
 
-    otvet = {"values": array_expert_profile}
+    otvet = {"values": array_expert_profile, "future_sobytia": future_sobytia, "last_sobytia": last_sobytia}
     return otvet
