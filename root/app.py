@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 import json
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
+from datetime import datetime
 
 
 app = flask.Flask(__name__)
@@ -87,13 +88,10 @@ def buttons_category_array():
     else:
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
-#     otvet = json.dumps({"massiv":[
-#     "Железногорск (Курская область)",
-#     "Железногорск (Красноярский край)",
-#     "Железногорск-Илимский"
-# ]})
-#     return otvet
 
+# Собираем страницу категории. Массив кнопок-категорий и словарь данных профиля ТОП3 экспертов.
+# url = 'https://enigmatic-gorge-60919.herokuapp.com/buttons_experts_array'
+# {"spreadsheet_id": "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE", "range": "Категории!2:10", "profile_range": "Лист1!c2:r", "pressed_button": "Категория 2"}
 @app.route("/buttons_experts_array", methods=['POST', "GET"])
 def buttons_experts_array():
     if flask.request.method == 'GET':
@@ -105,8 +103,13 @@ def buttons_experts_array():
             range_ = data.get('range')
             if 'pressed_button' in data:
                 pressed_button = data.get('pressed_button')
-                otvet = get_button_experts_massiv(range_, spreadsheet_id, pressed_button)
-                return otvet
+                if 'profile_range' in data:
+                    profile_range = data.get('profile_range')
+                    otvet = get_button_experts_massiv(range_, profile_range, spreadsheet_id, pressed_button)
+                    return otvet
+                else:
+                    otvet = json.dumps({"status": "0", "response": "profile_range was not transacted!"})
+                    return otvet
             else:
                 otvet = json.dumps({"status": "0", "response": "pressed_button was not transacted!"})
                 return otvet
@@ -117,6 +120,7 @@ def buttons_experts_array():
         otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
         return otvet
 
+# Собираем страницу профиля эксперта. Массив с даными профиля. Входные данные:url = 'https://enigmatic-gorge-60919.herokuapp.com/expert_profile'  {"range": "Лист1!c:n", "name": "Фет Алексей", "spreadsheet_id": "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE"}
 @app.route("/expert_profile", methods=['POST', "GET"])
 def expert_profile():
     if flask.request.method == 'GET':
@@ -126,7 +130,57 @@ def expert_profile():
         spreadsheet_id = data.get('spreadsheet_id')
         if 'range' in data:
             range_ = data.get('range')
-            otvet = get_experts_profile(range_, spreadsheet_id)
+            if 'name' in data:
+                name = data.get('name')
+                otvet = get_experts_profile(range_, name, spreadsheet_id)
+                return otvet
+            else:
+                otvet = json.dumps({"status": "0", "response": "name was not transacted!"})
+                return otvet
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+
+#получаем перечень событий для страницы профиля экспертов.
+#Входные данные:url = 'https://enigmatic-gorge-60919.herokuapp.com/amount_of_experts'  {"range": "Лист1!i:i", "name": "Фет Алексей", "spreadsheet_id": "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE"}
+@app.route("/expert_profile_sobytia", methods=['POST', "GET"])
+def expert_profile_sobytia():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            if 'name' in data:
+                name = data.get('name')
+                otvet = get_experts_profile_sobytia(name, range_, spreadsheet_id)
+                return otvet
+            else:
+                otvet = json.dumps({"status": "0", "response": "name was not transacted!"})
+                return otvet
+        else:
+            otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
+            return otvet
+    else:
+        otvet = json.dumps({"status": "0", "response": "spreadsheet_id was not transacted!"})
+        return otvet
+
+# Считаем количество экспертов всего.
+# Входные данные:url = 'https://enigmatic-gorge-60919.herokuapp.com/amount_of_experts'  {"range": "Лист1!i:i", "spreadsheet_id": "1RPn2loVmuXCAtr161HjdX3ZfRTIHzMuTK-SXqXD0UxE"}
+@app.route("/amount_of_experts", methods=['POST', "GET"])
+def amount_of_experts():
+    if flask.request.method == 'GET':
+        return 'The functions works well'
+    data = flask.request.get_json(force=True)
+    if 'spreadsheet_id' in data:
+        spreadsheet_id = data.get('spreadsheet_id')
+        if 'range' in data:
+            range_ = data.get('range')
+            otvet = get_amount_of_experts(range_, spreadsheet_id)
             return otvet
         else:
             otvet = json.dumps({"status": "0", "response": "range was not transacted!"})
@@ -192,6 +246,7 @@ def check_promocode_func(spreadsheet_id, promo, range_, user):
     otvet = {"status": status, "row_list": row_list, "row": str(row)}
     return otvet
 
+# записываем, что код использован (пишем ник пользователя)
 def write_used(spreadsheet_id, row, range_, user):
     service = google_registry()
     split_range = range_.split('!')
@@ -204,7 +259,7 @@ def write_used(spreadsheet_id, row, range_, user):
 
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range,
                                                      valueInputOption=value_Input_Option).execute()
-
+# Записываем данные в нужную таблицу.
 def write_array_func(range_, spreadsheet_id, data_array):
     service = google_registry()
     value_range_body = {
@@ -213,7 +268,7 @@ def write_array_func(range_, spreadsheet_id, data_array):
     value_Input_Option = "USER_ENTERED"
     request = service.spreadsheets().values().append(body=value_range_body, spreadsheetId=spreadsheet_id, range=range_,
                                                      valueInputOption=value_Input_Option).execute()
-
+#Находим массив кнопок-категорий
 def get_button_category_massiv(range_, spreadsheet_id):
     response = read_array(spreadsheet_id, range_)
     list_button_array = response.get('values')
@@ -222,7 +277,8 @@ def get_button_category_massiv(range_, spreadsheet_id):
         button_massiv.append(buttons[0])
     return button_massiv
 
-def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
+# Находим список кнопок-экспертов, словарь данных профиля ТОП3 экспертов, статус для определения, что нажата кнопка.
+def get_button_experts_massiv(range_, profile_range, spreadsheet_id, pressed_button):
     response = read_array(spreadsheet_id, range_)
     list_button_array = response.get('values')
     massiv = []
@@ -239,38 +295,72 @@ def get_button_experts_massiv(range_, spreadsheet_id, pressed_button):
                 range_list.append(list[i])
             break
 #Ищем ТОП3 экспертов на соответсвующих страницах таблицы. Название страницы == list[i]
-    array_expert_info = {}
-    count = 1
+    array_expert_profile = {}
+    kat_count = 1
     for expert in range_list:
-        range_ = f"{expert}!2:2"
-        expert_info_row = read_array(spreadsheet_id, range_)
-        expert_info_values = expert_info_row.get('values')
-        for i in range(len(expert_info_values)):
-            expert_info_list = expert_info_values[0]
-            for l in range(len(expert_info_list)):
-                array_expert_info[f"{count}{l+1}"] = expert_info_list[l]
-        count += 1
-    otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": array_expert_info}
+        response = read_array(spreadsheet_id, profile_range)
+        expert_values_array = response.get('values')
+        count = 1
+        for i in expert_values_array:
+            array_profile = i
+            if len(i) > 1:
+                if i[0] == expert:
+                    for l in array_profile:
+                        array_expert_profile[f"{kat_count}{count}"] = l
+                        count += 1
+        kat_count += 1
+    otvet = {"status": status, "massiv": massiv, "amount": amount, "experts_info": array_expert_profile}
 
     return otvet
 
-def get_experts_profile(range_, spreadsheet_id):
+# Получаем словарь с данными профиля эксперта для вывода на странице профиля
+def get_experts_profile(range_, name, spreadsheet_id):
     response = read_array(spreadsheet_id, range_)
     expert_values_array = response.get('values')
-    future_values = expert_values_array[1]
-    last_values = expert_values_array[2]
-    profile_values = expert_values_array[0]
     array_expert_profile = {}
     count = 1
-    future_sobytia = ''
-    last_sobytia = ''
-    for i in profile_values:
-        array_expert_profile[count] = i
-        count += 1
-    for i in future_values:
-        future_sobytia = f"{future_sobytia}{i}\n"
-    for i in last_values:
-        last_sobytia = f"{last_sobytia}{i}\n"
-
-    otvet = {"values": array_expert_profile, "future_sobytia": future_sobytia, "last_sobytia": last_sobytia}
+    status = "0"
+    for i in expert_values_array:
+        if len(i) > 1:
+            if i[0] == name:
+                status = "1"
+                # нужную строку с данными пакуем в словарь:
+                for l in i:
+                    array_expert_profile[count] = l
+                    count += 1
+    otvet = {"values": array_expert_profile, "status": status}
     return otvet
+
+# Получаем строку мероприятий для показа в профиле эксперта
+def get_experts_profile_sobytia(name, range_, spreadsheet_id):
+    response = read_array(spreadsheet_id, range_)
+    expert_values_array = response.get('values')
+    future_list = ""
+    last_list = ""
+    now = datetime.now()
+    for i in expert_values_array:
+        if i[1] == name:
+            if len(i) < 4:
+                i.append('')
+            day_sob, month_sob, year_sob = i[2].split('.')
+
+            if now <= datetime(int(year_sob), int(month_sob), int(day_sob)):
+                future_list = f"{future_list}{i[0]} - {i[2]} {i[3]}\n"
+            else:
+                last_list = f"{last_list}{i[0]} - {i[2]} {i[3]}\n"
+
+
+    otvet = {"future_list": future_list, "last_list": last_list}
+    return otvet
+
+# Получаем количество экспертов всего.
+def get_amount_of_experts(range_, spreadsheet_id):
+    response = read_array(spreadsheet_id, range_)
+    experts_array = response.get('values')
+    amount_of_experts = experts_array.count(['Эксперт'])
+
+    otvet ={"values": str(amount_of_experts)}
+    return otvet
+
+
+
